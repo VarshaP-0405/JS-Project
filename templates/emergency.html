@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚨 Emergency Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; font-family: Arial, sans-serif; }
+    .btn-danger, .btn-success { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">🧠 Health Guardian</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">🏠 Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/health">💊 Health Tracker</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/emergency">🚨 Emergency</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <h2 class="text-center mb-4">📱 Emergency Contacts</h2>
+
+    <div class="card p-4 mb-4">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <input type="text" id="contactName" class="form-control" placeholder="Enter name">
+        </div>
+        <div class="col-md-4">
+          <input type="tel" id="contactPhone" class="form-control" placeholder="Enter phone (e.g. +919876543210)">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-success w-100" onclick="addContact()">➕ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-3 mb-4">
+      <h5 class="mb-3">📋 Contact List</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered text-center">
+          <thead class="table-dark">
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="contactsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button class="btn btn-danger btn-lg" onclick="sendEmergency()">🚨 Send Emergency Alert</button>
+    </div>
+  </div>
+
+  <script>
+    function loadContacts() {
+      fetch("/get_contacts")
+        .then(res => res.json())
+        .then(data => {
+          const table = document.getElementById("contactsTableBody");
+          table.innerHTML = "";
+          data.forEach(contact => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${contact.name}</td>
+              <td>${contact.phone}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteContact(${contact.id})">🗑️ Delete</button>
+              </td>`;
+            table.appendChild(row);
+          });
+        });
+    }
+
+    function addContact() {
+      const name = document.getElementById("contactName").value.trim();
+      const phone = document.getElementById("contactPhone").value.trim();
+      if (!name || !phone) return alert("Please fill in both fields.");
+
+      fetch("/add_contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone })
+      }).then(() => {
+        document.getElementById("contactName").value = "";
+        document.getElementById("contactPhone").value = "";
+        loadContacts();
+      });
+    }
+
+    function deleteContact(id) {
+      if (!confirm("Are you sure you want to delete this contact?")) return;
+      fetch(`/delete_contact/${id}`, { method: "DELETE" })
+        .then(() => loadContacts());
+    }
+
+    function sendEmergency() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lon = pos.coords.longitude.toFixed(6);
+          const locationLink = `https://www.google.com/maps?q=${lat},${lon}`;
+          const message = `Please save me. A sudden emergency. My location is shared. Please come quick!\n\n📍 Location: ${locationLink}`;
+
+          const response = await fetch("/get_contacts");
+          const contacts = await response.json();
+
+          if (contacts.length === 0) {
+            alert("No emergency contacts found.");
+            return;
+          }
+
+          contacts.forEach(contact => {
+            const whatsappURL = `https://wa.me/${contact.phone.replace("+", "")}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, "_blank");
+          });
+        }, err => {
+          alert("Failed to get location. Please allow location access.");
+        });
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
+
+    window.onload = loadContacts;
+  </script>
+</body>
+</html>
