@@ -2,21 +2,17 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
-import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Use PostgreSQL in Render (or fallback to SQLite locally for development)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    "DATABASE_URL",
-    "sqlite:///health_tracker.db"
-).replace("postgres://", "postgresql://")
-
+# PostgreSQL DB configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://medical_app_db_user:Xe7GZUcwOBofWtgX9lf5UvVzRAZVoiE0@dpg-d1gf17emcj7s73cmobpg-a/medical_app_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
-# ---------- Models ----------
+# ------------------ MODELS ------------------
 class Mood(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mood = db.Column(db.String(50))
@@ -37,7 +33,8 @@ class EmergencyContact(db.Model):
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
 
-# ---------- Routes ----------
+# ------------------ ROUTES ------------------
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -50,7 +47,6 @@ def health():
 def emergency():
     return render_template("emergency.html")
 
-# ----- Mood Tracker -----
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     mood_data = request.json.get("mood")
@@ -59,7 +55,8 @@ def save_mood():
     if mood_entry:
         mood_entry.mood = mood_data
     else:
-        db.session.add(Mood(mood=mood_data, date=today))
+        mood_entry = Mood(mood=mood_data, date=today)
+        db.session.add(mood_entry)
     db.session.commit()
     return jsonify({"status": "saved"})
 
@@ -69,30 +66,30 @@ def get_mood():
     mood_entry = Mood.query.filter_by(date=today).first()
     return jsonify({"mood": mood_entry.mood if mood_entry else ""})
 
-# ----- Water Tracker -----
 @app.route("/save_water", methods=["POST"])
 def save_water():
-    count = request.json.get("count", 0)
+    data = request.json
     today = datetime.now().strftime("%Y-%m-%d")
-    entry = Water.query.filter_by(date=today).first()
-    if entry:
-        entry.count = count
+    water_entry = Water.query.filter_by(date=today).first()
+    if water_entry:
+        water_entry.count = data.get("count", 0)
     else:
-        db.session.add(Water(count=count, date=today))
+        water_entry = Water(count=data.get("count", 0), date=today)
+        db.session.add(water_entry)
     db.session.commit()
     return jsonify({"status": "saved"})
 
 @app.route("/get_water")
 def get_water():
     today = datetime.now().strftime("%Y-%m-%d")
-    entry = Water.query.filter_by(date=today).first()
-    return jsonify({"count": entry.count if entry else 0})
+    water_entry = Water.query.filter_by(date=today).first()
+    return jsonify({"count": water_entry.count if water_entry else 0})
 
-# ----- Medicine Reminders -----
 @app.route("/add_reminder", methods=["POST"])
 def add_reminder():
     data = request.json
-    db.session.add(Reminder(medicine=data["medicine"], time=data["time"]))
+    reminder = Reminder(medicine=data["medicine"], time=data["time"])
+    db.session.add(reminder)
     db.session.commit()
     return jsonify({"status": "added"})
 
@@ -109,11 +106,11 @@ def delete_reminder(id):
         db.session.commit()
     return jsonify({"status": "deleted"})
 
-# ----- Emergency Contacts -----
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
     data = request.json
-    db.session.add(EmergencyContact(name=data["name"], phone=data["phone"]))
+    new_contact = EmergencyContact(name=data['name'], phone=data['phone'])
+    db.session.add(new_contact)
     db.session.commit()
     return jsonify({"status": "success"})
 
@@ -131,9 +128,8 @@ def delete_contact(id):
         return jsonify({"status": "deleted"})
     return jsonify({"status": "not found"}), 404
 
-# ---------- Run ----------
+# ------------------ INIT ------------------
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=True)
