@@ -189,7 +189,7 @@
       osc.frequency.setValueAtTime(700, ctx.currentTime);
       osc.connect(ctx.destination);
       osc.start();
-      setTimeout(() => osc.stop(), 5000);
+      setTimeout(() => osc.stop(), 4000);
     }
 
     function loadReminders() {
@@ -204,7 +204,7 @@
               <td>${reminder.medicine}</td>
               <td>${reminder.time}</td>
               <td class="timer" id="countdown-${reminder.id}">--:--:--</td>
-              <td><button class="btn btn-danger btn-sm" onclick="deleteReminder(${reminder.id})">🗑️ Delete</button></td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteReminder(${reminder.id})">🗑️</button></td>
             `;
             table.appendChild(row);
             startCountdown(reminder);
@@ -241,3 +241,4 @@
   </script>
 </body>
 </html>
+
