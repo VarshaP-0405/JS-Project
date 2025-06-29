@@ -6,13 +6,13 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-# PostgreSQL DB configuration
+# ✅ Replace with your actual PostgreSQL URL
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://medical_app_db_user:Xe7GZUcwOBofWtgX9lf5UvVzRAZVoiE0@dpg-d1gf17emcj7s73cmobpg-a/medical_app_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db = SQLAlchemy(app)
 
 # ------------------ MODELS ------------------
+
 class Mood(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mood = db.Column(db.String(50))
@@ -47,6 +47,8 @@ def health():
 def emergency():
     return render_template("emergency.html")
 
+# ------------------ Mood ------------------
+
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     mood_data = request.json.get("mood")
@@ -66,6 +68,8 @@ def get_mood():
     mood_entry = Mood.query.filter_by(date=today).first()
     return jsonify({"mood": mood_entry.mood if mood_entry else ""})
 
+# ------------------ Water ------------------
+
 @app.route("/save_water", methods=["POST"])
 def save_water():
     data = request.json
@@ -84,6 +88,8 @@ def get_water():
     today = datetime.now().strftime("%Y-%m-%d")
     water_entry = Water.query.filter_by(date=today).first()
     return jsonify({"count": water_entry.count if water_entry else 0})
+
+# ------------------ Reminders ------------------
 
 @app.route("/add_reminder", methods=["POST"])
 def add_reminder():
@@ -106,9 +112,11 @@ def delete_reminder(id):
         db.session.commit()
     return jsonify({"status": "deleted"})
 
+# ------------------ Emergency Contacts ------------------
+
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
-    data = request.json
+    data = request.get_json()
     new_contact = EmergencyContact(name=data['name'], phone=data['phone'])
     db.session.add(new_contact)
     db.session.commit()
@@ -117,7 +125,8 @@ def add_contact():
 @app.route("/get_contacts")
 def get_contacts():
     contacts = EmergencyContact.query.all()
-    return jsonify([{"id": c.id, "name": c.name, "phone": c.phone} for c in contacts])
+    result = [{"id": c.id, "name": c.name, "phone": c.phone} for c in contacts]
+    return jsonify(result)
 
 @app.route("/delete_contact/<int:id>", methods=["DELETE"])
 def delete_contact(id):
@@ -128,8 +137,9 @@ def delete_contact(id):
         return jsonify({"status": "deleted"})
     return jsonify({"status": "not found"}), 404
 
-# ------------------ INIT ------------------
+# ------------------ MAIN ------------------
+
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
+        db.create_all()  # Ensure all tables are created
     app.run(debug=True)
