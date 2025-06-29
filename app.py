@@ -137,6 +137,11 @@ def delete_contact(id):
         db.session.commit()
         return jsonify({"status": "deleted"})
     return jsonify({"status": "not found"}), 404
+@app.route("/init_db")
+def init_db():
+    with app.app_context():
+        db.create_all()
+    return "✅ Database tables created successfully!"
 
 # ------------------ Run App ------------------
 if __name__ == "__main__":
