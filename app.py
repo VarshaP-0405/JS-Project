@@ -12,6 +12,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://medical_app_db_user:Xe7GZU
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
+
 # ✅ Models
 class Mood(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,7 +34,8 @@ class EmergencyContact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
-
+with app.app_context():
+    db.create_all()
 # ✅ Routes
 @app.route("/")
 def index():
