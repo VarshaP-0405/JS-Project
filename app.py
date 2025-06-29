@@ -46,11 +46,7 @@ def health():
 def emergency():
     return render_template("emergency.html")
 
-# ✅ One-time route to initialize the database
-@app.route("/init_db")
-def init_db():
-    db.create_all()
-    return "✅ All tables created successfully in PostgreSQL!"
+
 
 # ------------------ Mood Tracker ------------------
 @app.route("/save_mood", methods=["POST"])
