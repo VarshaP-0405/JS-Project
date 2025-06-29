@@ -2,17 +2,17 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# ✅ Replace with your actual PostgreSQL URL
+# ✅ PostgreSQL Database Configuration for Render
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://medical_app_db_user:Xe7GZUcwOBofWtgX9lf5UvVzRAZVoiE0@dpg-d1gf17emcj7s73cmobpg-a/medical_app_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# ------------------ MODELS ------------------
-
+# ✅ Models
 class Mood(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mood = db.Column(db.String(50))
@@ -33,8 +33,7 @@ class EmergencyContact(db.Model):
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
 
-# ------------------ ROUTES ------------------
-
+# ✅ Routes
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -47,8 +46,7 @@ def health():
 def emergency():
     return render_template("emergency.html")
 
-# ------------------ Mood ------------------
-
+# ✅ Mood
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     mood_data = request.json.get("mood")
@@ -68,8 +66,7 @@ def get_mood():
     mood_entry = Mood.query.filter_by(date=today).first()
     return jsonify({"mood": mood_entry.mood if mood_entry else ""})
 
-# ------------------ Water ------------------
-
+# ✅ Water
 @app.route("/save_water", methods=["POST"])
 def save_water():
     data = request.json
@@ -89,8 +86,7 @@ def get_water():
     water_entry = Water.query.filter_by(date=today).first()
     return jsonify({"count": water_entry.count if water_entry else 0})
 
-# ------------------ Reminders ------------------
-
+# ✅ Reminders
 @app.route("/add_reminder", methods=["POST"])
 def add_reminder():
     data = request.json
@@ -112,8 +108,7 @@ def delete_reminder(id):
         db.session.commit()
     return jsonify({"status": "deleted"})
 
-# ------------------ Emergency Contacts ------------------
-
+# ✅ Emergency Contacts
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
     data = request.get_json()
@@ -137,9 +132,9 @@ def delete_contact(id):
         return jsonify({"status": "deleted"})
     return jsonify({"status": "not found"}), 404
 
-# ------------------ MAIN ------------------
-
+# ✅ Initialize database
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Ensure all tables are created
-    app.run(debug=True)
+        db.create_all()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
