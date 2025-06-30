@@ -44,7 +44,7 @@ EmergencyBase.metadata.create_all(emergency_engine)
 
 @app.route('/')
 def home():
-    return render_template('health.html')
+    return render_template('index.html')
 
 @app.route('/')
 def index():
