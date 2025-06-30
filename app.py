@@ -7,18 +7,27 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# ✅ Secure database config using environment variable
-db_url = os.environ.get("DATABASE_URL")
-if db_url and db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-if db_url and "?sslmode" not in db_url:
-    db_url += "?sslmode=require"
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+# 🔗 Load database URLs from environment
+health_url = os.environ.get("HEALTH_DB_URL")
+emergency_url = os.environ.get("EMERGENCY_DB_URL")
+
+# 🛠 Fix old scheme prefix & enforce SSL
+def fix_url(url):
+    if url and url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    if url and "?sslmode" not in url:
+        url += "?sslmode=require"
+    return url
+
+app.config['SQLALCHEMY_DATABASE_URI'] = fix_url(health_url)  # Default DB for health
+app.config['SQLALCHEMY_BINDS'] = {
+    'emergency': fix_url(emergency_url)
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# ------------------ Models ------------------
+# ------------------ Health Models ------------------
 class Mood(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mood = db.Column(db.String(50))
@@ -34,7 +43,9 @@ class Reminder(db.Model):
     medicine = db.Column(db.String(100))
     time = db.Column(db.String(10))
 
+# ------------------ Emergency Model (Bound DB) ------------------
 class EmergencyContact(db.Model):
+    __bind_key__ = 'emergency'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
@@ -103,11 +114,8 @@ def add_reminder():
 
 @app.route("/get_reminders")
 def get_reminders():
-    try:
-        reminders = Reminder.query.all()
-        return jsonify([{"id": r.id, "medicine": r.medicine, "time": r.time} for r in reminders])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    reminders = Reminder.query.all()
+    return jsonify([{"id": r.id, "medicine": r.medicine, "time": r.time} for r in reminders])
 
 @app.route("/delete_reminder/<int:id>", methods=["DELETE"])
 def delete_reminder(id):
@@ -145,10 +153,11 @@ def delete_contact(id):
 @app.route("/init_db")
 def init_db():
     try:
-        db.create_all()
-        return "✅ Database tables created successfully!"
+        db.create_all()  # Default (health) DB
+        db.create_all(bind='emergency')  # Emergency DB
+        return "✅ All tables created successfully!"
     except Exception as e:
-        return f"❌ Error creating tables: {e}"
+        return f"❌ Error initializing DBs: {e}"
 
 # ------------------ Run App ------------------
 if __name__ == "__main__":
