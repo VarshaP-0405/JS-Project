@@ -7,9 +7,15 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# ✅ Use your PostgreSQL DB (REPLACE this with your actual DB URL if needed)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://medical_app_db_user:Xe7GZUcwOBofWtgX9lf5UvVzRAZVoiE0@dpg-d1gf17emcj7s73cmobpg-a/medical_app_db'
+# ✅ Secure database config using environment variable
+db_url = os.environ.get("DATABASE_URL")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+if db_url and "?sslmode" not in db_url:
+    db_url += "?sslmode=require"
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 # ------------------ Models ------------------
@@ -45,8 +51,6 @@ def health():
 @app.route("/emergency", methods=["GET", "HEAD"])
 def emergency():
     return render_template("emergency.html")
-
-
 
 # ------------------ Mood Tracker ------------------
 @app.route("/save_mood", methods=["POST"])
@@ -133,14 +137,16 @@ def delete_contact(id):
         db.session.commit()
         return jsonify({"status": "deleted"})
     return jsonify({"status": "not found"}), 404
+
+# ------------------ Init DB Route ------------------
 @app.route("/init_db")
 def init_db():
-    with app.app_context():
+    try:
         db.create_all()
-    return "✅ Database tables created successfully!"
+        return "✅ Database tables created successfully!"
+    except Exception as e:
+        return f"❌ Error creating tables: {e}"
 
 # ------------------ Run App ------------------
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()  # Also useful for local dev
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
