@@ -88,7 +88,7 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
 
-  <!-- Your Script -->
+  <!-- App Script -->
   <script>
     let waterCount = 0;
 
@@ -159,9 +159,7 @@
       const [hr, min] = reminder.time.split(":");
       target.setHours(hr, min, 0, 0);
 
-      if (target < new Date()) {
-        target.setDate(target.getDate() + 1);
-      }
+      if (target < new Date()) target.setDate(target.getDate() + 1);
 
       function updateCountdown() {
         const now = new Date();
@@ -215,4 +213,19 @@
     }
 
     function loadWater() {
-     
+      fetch("/get_water")
+        .then(res => res.json())
+        .then(data => {
+          if (data.count !== undefined) {
+            waterCount = data.count;
+            updateWaterDisplay();
+          }
+        });
+    }
+
+    function loadMood() {
+      fetch("/get_mood")
+        .then(res => res.json())
+        .then(data => {
+          if (data.mood) {
+            document.getElementById("moodDisplay").textContent = "You're feeling " + data.mood;
