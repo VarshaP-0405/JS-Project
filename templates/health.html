@@ -224,8 +224,17 @@
     }
 
     function loadMood() {
-      fetch("/get_mood")
-        .then(res => res.json())
-        .then(data => {
-          if (data.mood) {
-            document.getElementById("moodDisplay").textContent = "You're feeling " + data.mood;
+  fetch("/get_mood")
+    .then(res => res.json())
+    .then(data => {
+      if (data.mood) {
+        document.getElementById("moodDisplay").textContent = "You're feeling " + data.mood;
+      }
+    });
+}
+
+window.onload = () => {
+  loadWater();
+  loadMood();
+  loadReminders();
+};
