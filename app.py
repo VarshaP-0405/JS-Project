@@ -34,7 +34,12 @@ class Reminder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     medicine = db.Column(db.String(100), nullable=False)
     time = db.Column(db.String(5), nullable=False)  # HH:MM format
-
+class EmergencyContact(EmergencyBase):
+    __tablename__ = 'emergency_contacts'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    phone = Column(String(20))
+EmergencyBase.metadata.create_all(emergency_engine)
 # ---------------- Routes ----------------
 
 @app.route('/')
@@ -54,6 +59,7 @@ def health_page():
 @app.route('/emergency')
 def emergency_page():
     return render_template('emergency.html')
+    
 @app.route('/save_mood', methods=['POST'])
 def save_mood():
     data = request.get_json()
@@ -105,6 +111,28 @@ def delete_reminder(id):
     if reminder:
         db.session.delete(reminder)
         db.session.commit()
+    return jsonify({"status": "deleted"})
+@app.route('/add_contact', methods=['POST'])
+def add_contact():
+    data = request.get_json()
+    name = data.get('name')
+    phone = data.get('phone')
+    contact = EmergencyContact(name=name, phone=phone)
+    emergency_session.add(contact)
+    emergency_session.commit()
+    return jsonify({"status": "added"})
+@app.route('/get_contacts')
+def get_contacts():
+    contacts = emergency_session.query(EmergencyContact).all()
+    return jsonify([{"id": c.id, "name": c.name, "phone": c.phone} for c in contacts])
+
+# Delete contact
+@app.route('/delete_contact/<int:id>', methods=['DELETE'])
+def delete_contact(id):
+    contact = emergency_session.query(EmergencyContact).get(id)
+    if contact:
+        emergency_session.delete(contact)
+        emergency_session.commit()
     return jsonify({"status": "deleted"})
 
 # ---------------- Run App ----------------
