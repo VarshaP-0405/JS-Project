@@ -42,21 +42,19 @@ class EmergencyContact(EmergencyBase):
 EmergencyBase.metadata.create_all(emergency_engine)
 # ---------------- Routes ----------------
 
-@app.route('/')
-def home():
-    return render_template('index.html')
 
-@app.route('/')
+
+@app.route('/', methods=['GET', 'HEAD'])
 def index():
     return render_template('index.html')
 
 # ✅ Route for health tracker
-@app.route('/health')
+@app.route('/health', methods=['GET', 'HEAD'])
 def health_page():
     return render_template('health.html')
 
 # ✅ Route for emergency contact page
-@app.route('/emergency')
+@app.route('/emergency',methods=['GET', 'HEAD'])
 def emergency_page():
     return render_template('emergency.html')
     
