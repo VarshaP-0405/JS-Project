@@ -77,6 +77,7 @@ def save_mood():
     db.session.commit()
     return jsonify({"status": "saved"})
 
+
 @app.route("/get_mood")
 def get_mood():
     today = datetime.now().strftime("%Y-%m-%d")
