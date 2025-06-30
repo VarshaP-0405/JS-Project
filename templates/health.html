@@ -100,6 +100,14 @@
       updateWaterDisplay();
       saveWater();
     }
+    function setMood(mood) {
+  document.getElementById("moodDisplay").textContent = "You're feeling " + mood;
+  fetch("/save_mood", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mood: mood })
+  });
+}
 
     function removeWater() {
       if (waterCount > 0) waterCount--;
