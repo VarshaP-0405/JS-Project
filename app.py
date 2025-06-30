@@ -56,9 +56,10 @@ def health_page():
 
 
 # ✅ Route for emergency contact page
-@app.route('/emergency',methods=['GET', 'HEAD'])
+@app.route('/emergency', endpoint='emergency')
 def emergency_page():
     return render_template('emergency.html')
+
     
 @app.route('/save_mood', methods=['POST'])
 def save_mood():
