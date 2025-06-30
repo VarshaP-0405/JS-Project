@@ -49,9 +49,11 @@ def index():
     return render_template('index.html')
 
 # ✅ Route for health tracker
-@app.route('/health', methods=['GET', 'HEAD'])
+@app.route('/health', endpoint='health')
 def health_page():
     return render_template('health.html')
+
+
 
 # ✅ Route for emergency contact page
 @app.route('/emergency',methods=['GET', 'HEAD'])
