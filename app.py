@@ -39,12 +39,21 @@ class Reminder(db.Model):
 
 @app.route('/')
 def home():
-    return "Health Tracker Backend Running"
-
-@app.route('/health')
-def health():
     return render_template('health.html')
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# ✅ Route for health tracker
+@app.route('/health')
+def health_page():
+    return render_template('health.html')
+
+# ✅ Route for emergency contact page
+@app.route('/emergency')
+def emergency_page():
+    return render_template('emergency.html')
 @app.route('/save_mood', methods=['POST'])
 def save_mood():
     data = request.get_json()
