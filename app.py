@@ -103,8 +103,11 @@ def add_reminder():
 
 @app.route("/get_reminders")
 def get_reminders():
-    reminders = Reminder.query.all()
-    return jsonify([{"id": r.id, "medicine": r.medicine, "time": r.time} for r in reminders])
+    try:
+        reminders = Reminder.query.all()
+        return jsonify([{"id": r.id, "medicine": r.medicine, "time": r.time} for r in reminders])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/delete_reminder/<int:id>", methods=["DELETE"])
 def delete_reminder(id):
