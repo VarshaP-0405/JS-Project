@@ -82,7 +82,6 @@
         </table>
       </div>
     </div>
-
   </div>
 
   <!-- Bootstrap JS -->
@@ -100,14 +99,6 @@
       updateWaterDisplay();
       saveWater();
     }
-    function setMood(mood) {
-  document.getElementById("moodDisplay").textContent = "You're feeling " + mood;
-  fetch("/save_mood", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mood: mood })
-  });
-}
 
     function removeWater() {
       if (waterCount > 0) waterCount--;
@@ -225,4 +216,16 @@
         .then(data => {
           if (data.count !== undefined) {
             waterCount = data.count;
-            update
+            updateWaterDisplay();
+          }
+        });
+    }
+
+    // Load data when page is ready
+    window.onload = function () {
+      loadWater();
+      loadReminders();
+    };
+  </script>
+</body>
+</html>
